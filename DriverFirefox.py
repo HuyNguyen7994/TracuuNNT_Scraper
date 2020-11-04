@@ -170,7 +170,7 @@ class DriverFirefox(webdriver.Firefox):
         logger.info('Finished scraping. Record is present.')
         return parse_result
                 
-    def scan_records(self, search_terms, max_page=10, max_attempts=5):
+    def scan(self, search_terms, max_page=10, max_attempts=5):
         """unstable feature - scan all pages yielded from search terms
         will not go into any specific record
         the site breaks after page 10 so the script stops there
@@ -245,11 +245,11 @@ class DriverFirefox(webdriver.Firefox):
     
     def scrape_all(self, search_terms, max_attempts=5):
         """scrape all records returned under search terms"""
-        records = self.scan_records(search_terms, max_attempts=max_attempts)
+        records = self.scan(search_terms, max_attempts=max_attempts)
         updated_records = []
         for record in records:
             record_id = record['MST']
             parse_result = self.scrape({'Mã số thuế':record_id}, max_attempts=max_attempts)
             updated_records.append(parse_result)
-        return updated_records
+        return {'scan': records, 'scrape': updated_records}
         
