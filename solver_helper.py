@@ -5,20 +5,10 @@ from itertools import groupby
 import cv2
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 from tensorflow.keras.utils import to_categorical
 
 VALID_CHAR = '2345678abcdefghkmnprwxy'
 VALID_SIZE = 5
-
-def show_image(image):
-    """Show image using plt.imshow and plt.show
-
-    Args:
-        image (array): valid image array (width, height, channel) or (width, height)
-    """
-    plt.imshow(image)
-    plt.show()
 
 def remove_grid(image):
     """Remove grid from captcha using MORPH_OPEN in cv2
