@@ -1,35 +1,50 @@
 # %%
+# -*- coding: utf-8 -*-
 import logging
 import DriverFirefox
-import tensorflow as tf
 import argparse
 import json
+from datetime import datetime
 
-# initalize logger module
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# aux function
+
+# create main logger
+logger = logging.getLogger('TracuuNNT')
 logger.setLevel(logging.INFO)
-file_handler = logging.FileHandler(r'.\log\running_log.csv')
-file_handler.setLevel(logging.INFO)
-
-log_formatter = logging.Formatter("%(relativeCreated)d,%(levelname)s,%(message)s")
-file_handler.setFormatter(log_formatter)
-
-logger.addHandler(file_handler)
+# create file handler
+today = datetime.today().strftime(r'%Y%m%d')
+fh = logging.FileHandler(f'.\\log\\{today}_run_log.txt', encoding='utf-8')
+fh.setLevel(logging.INFO)
+# create console handler
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+# create formatter and add it to the handlers
+formatter = logging.Formatter("%(asctime)s : %(levelname)s : %(name)s : %(message)s")
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(fh)
+logger.addHandler(ch)
 
 # intialize argparser
 # parser = argparse.ArgumentParser(description='Scrape records from http://tracuunnt.gdt.gov.vn/tcnnt/mstdn.jsp')
 
 if __name__ == '__main__':
-    logger.info('Loading solver model...')
-    model = tf.keras.models.load_model(r'.\solver\CNN5_v10_acc_98.h5')
     logger.info('Initialising webdriver...')
-    with DriverFirefox.DriverFirefox(model) as driver:
-        logger.info('Start scraping.')
-        result = driver.scrape_all({'Mã số thuế':'090018928'})
-        result = {'result':result}
+    with DriverFirefox.DriverFirefox(solver_path=r'.\solver\CNN5_v10_acc_98.h5') as driver, open(r'.\output\result.json', 'a', encoding='utf-8') as f:
+        logger.info('Start scraping...')
+        for i in range(10):
+            result = driver.scrape_all({'TaxNumber':f'{i:02}'},1)
+            search_keys = str({'TaxNumber':f'{i:02}'})
+            result = {search_keys:result}
+            f.write(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
         logger.info('Finished scraping.')
+        
+    """
     with open(r'.\output\result.json', 'w', encoding='utf-8') as f:
         f.write(json.dumps(result,indent=2,sort_keys=True,ensure_ascii=False))
+    """
+
+# %%
 
 # %%

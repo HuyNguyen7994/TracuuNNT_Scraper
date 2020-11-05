@@ -1,3 +1,4 @@
+import logging
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
 from solver_helper import preprocess_raw_image, array_to_label, image_to_tensor
@@ -7,20 +8,29 @@ import cv2
 import tensorflow as tf
 from bs4 import BeautifulSoup as bs
 from unicodedata import normalize
-import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('TracuuNNT.WebDriver')
 
 class DriverFirefox(webdriver.Firefox):
-    def __init__(self, solver, headless=True, *args, **kwargs):
+    def __init__(self, solver_path=None, headless=True, *args, **kwargs):
         options = Options()
         options.headless = headless
         super().__init__(options=options, *args, **kwargs)
-        self.solver = solver
+        if solver_path:
+            self.set_solver(solver_path)
+        else:
+            self.solver = None
         self.site = r'http://tracuunnt.gdt.gov.vn/tcnnt/mstdn.jsp'
         self.scopes = ['.+captcha.png.+', '.+mstdn.jsp$', '.+doanhnghiepchuquan.jsp$', '.+chinhanh.jsp$',
                        '.+tructhuoc.jsp$', '.+daidien.jsp$', '.+loaithue.jsp$', '.+nganhkinhdoanh.jsp$']
-        
+    
+    def set_solver(self, path):
+        """set solver to be used for breaking captcha. Must support
+        input in form of (1,64,128,1) (bs,height,width,channel)
+        and method predict() to return one-hot vector array"""
+        logger.info('Loading solver at %s', path)
+        self.solver = tf.keras.models.load_model(path)
+    
     def _decode_image(self, bytes_string):
         img = cv2.imdecode(np.frombuffer(bytes_string, np.uint8),-1)
         img = img[:,:,-1]
@@ -62,10 +72,10 @@ class DriverFirefox(webdriver.Firefox):
         return answer
 
     def _send_search_terms(self, search_dict):
-        name2xpath = {'Mã số thuế': "//input[@name='mst']",
-                      'Tên': "//input[@name='fullname']",
-                      'Địa chỉ': "//input[@name='address']",
-                      'Số chứng thực':"//input[@name='cmt']"}
+        name2xpath = {'TaxNumber': "//input[@name='mst']",
+                      'Name': "//input[@name='fullname']",
+                      'Address': "//input[@name='address']",
+                      'IdNumber':"//input[@name='cmt']"}
         for term in search_dict:
             xpath = name2xpath[term]
             elem = self.find_element_by_xpath(xpath)
@@ -113,14 +123,14 @@ class DriverFirefox(webdriver.Firefox):
         """search and scrape the first record returned by provided search terms
 
         Args:
-            search_terms (dict): Accepted dict_key: ('Mã số thuế', 'Tên', 'Địa chỉ', 'Số chứng thực')
+            search_terms (dict): Accepted dict_key: ('TaxNumber', 'Name', 'Address', 'IdNumber')
             max_attempts (int, optional): Maximum re-tries. To avoid infinite loop. Defaults to 5.
 
         Returns:
             if record exists: json-like dict
             if record not exists: None
         """
-        logger.info('Scraping single record... Provided search terms=%s', search_terms)
+        logger.info('Scraping single record... Provided search terms=%s', str(search_terms))
         self.get(self.site) # reset the site
         parse_result = {}
         attempt = 0
@@ -185,7 +195,7 @@ class DriverFirefox(webdriver.Firefox):
         """
         # TODO: handle next page scraping3
         # href="javascript:gotoPage(3)"
-        logger.info('Scanning for possible records... Provided search terms=%s', search_terms)
+        logger.info('Scanning for possible records... Provided search terms=%s', str(search_terms))
         self.get(self.site) # reset the site
         attempt = 0
         parse_result = []
@@ -243,13 +253,13 @@ class DriverFirefox(webdriver.Firefox):
         logger.info('Finished scanning. %d records found', len(parse_result))
         return parse_result
     
-    def scrape_all(self, search_terms, max_attempts=5):
+    def scrape_all(self, search_terms, max_page=10, max_attempts=5):
         """scrape all records returned under search terms"""
-        records = self.scan(search_terms, max_attempts=max_attempts)
+        records = self.scan(search_terms, max_page=max_page, max_attempts=max_attempts)
         updated_records = []
         for record in records:
             record_id = record['MST']
-            parse_result = self.scrape({'Mã số thuế':record_id}, max_attempts=max_attempts)
+            parse_result = self.scrape({'TaxNumber':record_id}, max_attempts=max_attempts)
             updated_records.append(parse_result)
         return {'scan': records, 'scrape': updated_records}
         
