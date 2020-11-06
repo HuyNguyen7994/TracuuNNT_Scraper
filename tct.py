@@ -5,7 +5,7 @@ import json
 import argparse
 from datetime import datetime
 from pathlib import Path
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # hack to suppress tensorflow logging (https://github.com/tensorflow/tensorflow/issues/31870). Anti-pattern. Consider changing it later
 
 import DriverFirefox
 
