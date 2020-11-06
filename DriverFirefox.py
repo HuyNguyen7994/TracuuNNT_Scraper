@@ -173,7 +173,7 @@ class DriverFirefox(webdriver.Firefox):
             #req = self.last_request
             req = self.wait_for_request(pattern)
             header = req.url.split('/')[-1][:-4]
-            parse_result[header] = self._parse_sub_table(bs(req.response.body))
+            parse_result[header] = self._parse_sub_table(bs(req.response.body, 'lxml'))
         logger.debug('Finished scraping sub-tables.')
      
         del self.requests # clear requests history
