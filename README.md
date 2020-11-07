@@ -18,7 +18,7 @@ This is the easiest way to enable GPU support for tensorflow.
 - `scan` takes on average 0.5 second to scan and scrape a single page
 
 # EXAMPLES
-Below are expected verbose of 3 correctly-running program
+Below are expected log of 3 correctly-running program
 ```
 (test) .\TracuuNNT_main>python tct.py scrape 030344323 .\output\scrape
 2020-11-06 10:44:07,767 : INFO : TracuuNNT : Initialising webdriver...
