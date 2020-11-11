@@ -9,13 +9,13 @@ import tensorflow as tf
 from bs4 import BeautifulSoup as bs
 from unicodedata import normalize
 
-logger = logging.getLogger('TracuuNNT.WebDriver')
+logger = logging.getLogger(__name__)
 
 class DriverFirefox(webdriver.Firefox):
-    def __init__(self, solver_path=None, headless=True, *args, **kwargs):
+    def __init__(self, solver_path=None, headless=True, executable_path='geckodriver', *args, **kwargs):
         options = Options()
         options.headless = headless
-        super().__init__(options=options, *args, **kwargs)
+        super().__init__(options=options, executable_path=executable_path, *args, **kwargs)
         if solver_path:
             self.set_solver(solver_path)
         else:
