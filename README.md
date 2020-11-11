@@ -60,4 +60,3 @@ Below are expected log of 3 correctly-running program
 2020-11-06 10:45:19,119 : Finished scanning. 3 records found
 2020-11-06 10:45:19,120 : Finished scraping.
 2020-11-06 10:45:19,680 : Finished writing to output\scan\result.json.
-```
