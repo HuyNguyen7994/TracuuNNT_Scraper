@@ -9,8 +9,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # hack to suppress tensorflow logging (
 import json
 import argparse
 from pathlib import Path
-import DriverFirefox
-from config import ConfigManager
+from src.DriverFirefox import DriverFirefox
+from src.config import ConfigManager
 
 def import_config(config_folder=None):
     Config = ConfigManager()
@@ -37,8 +37,8 @@ def init_argparser(config):
 
 def run_scraper(args, config):
     logger.info('Initialising webdriver...')
-    with DriverFirefox.DriverFirefox(solver_path=config['default']['solver_path'], 
-                                     headless=True, executable_path=config['default']['webdriver_path']) as driver:
+    with DriverFirefox(solver_path=config['default']['solver_path'], 
+                       headless=True, executable_path=config['default']['webdriver_path']) as driver:
         commands = {'scrape':driver.scrape,
                     'scan': driver.scan,
                     'scrape_all': driver.scrape_all}

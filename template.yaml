@@ -27,7 +27,7 @@ logging:
     __main__:
       level: INFO
       handlers : [console, file]
-    DriverFirefox:
+    src.DriverFirefox:
       level: INFO
       handlers : [console, file]
     

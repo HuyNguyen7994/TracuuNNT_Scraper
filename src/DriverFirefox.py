@@ -1,13 +1,12 @@
 import logging
-from seleniumwire import webdriver
-from selenium.webdriver.firefox.options import Options
-from solver_helper import preprocess_raw_image, array_to_label, image_to_tensor
-
-import numpy as np
+from unicodedata import normalize
 import cv2
+import numpy as np
 import tensorflow as tf
 from bs4 import BeautifulSoup as bs
-from unicodedata import normalize
+from seleniumwire import webdriver
+from selenium.webdriver.firefox.options import Options
+from .solver_helper import preprocess_raw_image, array_to_label, image_to_tensor
 
 logger = logging.getLogger(__name__)
 
