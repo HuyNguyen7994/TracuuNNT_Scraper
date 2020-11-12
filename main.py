@@ -9,7 +9,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # hack to suppress tensorflow logging (
 import json
 import argparse
 from pathlib import Path
-from src.DriverFirefox import DriverFirefox
+from src import DriverFirefox
 from src.config import ConfigManager
 
 def import_config(config_folder=None):
@@ -29,7 +29,7 @@ def init_argparser(config):
     parser = argparse.ArgumentParser(description='Scrape records from http://tracuunnt.gdt.gov.vn/tcnnt/mstdn.jsp.\nGo to https://github.com/HuyNguyen7994/TracuuNNT_Scraper for more details.',
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('command', help="specify how it scrapes. Supported command: scrape, scan, scrape_all")
-    parser.add_argument('input', help="""search terms for scraper. Supported input: single search term (only tax number is supported at the moment), planned feature_path to txt/csv file contains multiple search terms""")
+    parser.add_argument('input', help="""search terms for scraper. Supported input: single search term ('TaxNumber', 'Name', 'Address', 'IdNumber') with value in format term=value, planned feature_path to txt/csv file contains multiple search terms""")
     parser.add_argument('output', help="path to output folder. Configured in config/main.yaml", nargs='?', default=config['default']['output_folder'])
 
     args = parser.parse_args()
@@ -37,13 +37,20 @@ def init_argparser(config):
 
 def run_scraper(args, config):
     logger.info('Initialising webdriver...')
-    with DriverFirefox(solver_path=config['default']['solver_path'], 
-                       headless=True, executable_path=config['default']['webdriver_path']) as driver:
+    if config['default']['site'] == 'business':
+        logger.info('Navigating to TracuuNNT\\Doanh nghiep')
+        run_driver = DriverFirefox.business_scraper
+    elif config['default']['site'] == 'personal':
+        logger.info('Navigating to TracuuNNT\\Ca nhan')
+        run_driver = DriverFirefox.personal_scraper
+    with run_driver(solver_path=config['default']['solver_path'], 
+                    headless=True, executable_path=config['default']['webdriver_path']) as driver:
         commands = {'scrape':driver.scrape,
                     'scan': driver.scan,
                     'scrape_all': driver.scrape_all}
         logger.info('Start scraping...')
-        result = commands[args.command]({'TaxNumber':args.input})
+        search_term, search_value = args.input.split('=')
+        result = commands[args.command]({search_term:search_value})
         search_keys = str({'TaxNumber':args.input})
         result = {search_keys:result}
         logger.info('Finished scraping.')
