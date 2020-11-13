@@ -6,9 +6,6 @@ logger = logging.getLogger(__name__)
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # hack to suppress tensorflow logging (https://github.com/tensorflow/tensorflow/issues/31870). Anti-pattern. Consider changing it later
 
-import json
-import argparse
-from time import time
 from pathlib import Path
 from src import DriverFirefox
 from src.config import ConfigManager
@@ -27,19 +24,9 @@ def init_logger(config_dict):
     Path(config_dict['handlers']['file']['filename']).parent.mkdir(parents=True, exist_ok=True)
     logging.config.dictConfig(config_dict)
 
-def init_argparser(config):
-    parser = argparse.ArgumentParser(description='Scrape records from http://tracuunnt.gdt.gov.vn/tcnnt/mstdn.jsp.\nGo to https://github.com/HuyNguyen7994/TracuuNNT_Scraper for more details.',
-                                     formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('command', help="specify how it scrapes. Supported command: scrape, scan, scrape_all")
-    parser.add_argument('input', help="""search terms for scraper. Supported input: single search term ('TaxNumber', 'Name', 'Address', 'IdNumber') with value in format term=value, planned feature_path to txt/csv file contains multiple search terms""")
-    parser.add_argument('output', help="path to output folder. Configured in config/main.yaml", nargs='?', default=config['default']['output_folder'])
-    parser.add_argument('--site', '-s', help="to scrape business or personal record")
-    args = parser.parse_args()
-    return args
-
-def run_scraper(args, config):
+def run_scraper(site, command, term_value, config):
     logger.info('Initialising webdriver...')
-    config['default']['site'] = args.site or config['default']['site']
+    config['default']['site'] = site or config['default']['site']
     if config['default']['site'] == 'business':
         logger.info('Navigating to TracuuNNT\\Doanh nghiep')
         run_driver = DriverFirefox.business_scraper
@@ -52,30 +39,19 @@ def run_scraper(args, config):
                     'scan': driver.scan,
                     'scrape_all': driver.scrape_all}
         logger.info('Start scraping...')
-        search_term, search_value = args.input.split('=')
-        result = commands[args.command]({search_term:search_value})
+        search_term, search_value = term_value.split('=')
+        result = commands[command]({search_term:search_value})
         search_keys = str({search_term:search_value})
         result = {search_keys:result}
         logger.info('Finished scraping.')
+    return result
 
-    logger.debug('Writing output...')
-    output_folder = Path(args.output)
-    output_folder.mkdir(parents=True, exist_ok=True)
-    output_file = output_folder / (str(int(time())) + '.json')
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
-
-    logger.info('Finished writing to %s.', output_file)
-
-def main():
+def main(site, command, term_value):
     config_path = Path(r'.\config')
     if config_path.exists():
         config = import_config(config_path)
     else:
         config = import_config()
     init_logger(config['logging'])
-    args = init_argparser(config)
-    run_scraper(args, config)
-    
-if __name__ == '__main__':
-    main()
+    result = run_scraper(site, command, term_value, config)
+    return result

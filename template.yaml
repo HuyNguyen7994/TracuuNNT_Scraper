@@ -23,6 +23,7 @@ logging:
       class: logging.FileHandler
       level: INFO
       formatter: full
+      encoding: utf-8
       filename: log/log.txt
   loggers:
     __main__:
