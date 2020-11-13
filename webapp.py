@@ -12,10 +12,10 @@ from src.config import ConfigManager
 
 def import_config(config_folder=None):
     Config = ConfigManager()
-    config_path = Path(config_folder or r'.\config')
+    config_path = Path(config_folder or r'config')
     if not config_path.exists():
-        Config.create_template('template.yaml',r'.\config')
-        Config.loads_yaml(r'.\config')
+        Config.create_template('template.yaml',r'config')
+        Config.loads_yaml(r'config')
     else:
         Config.loads_yaml(config_folder)
     return Config
@@ -24,7 +24,7 @@ def init_logger(config_dict):
     Path(config_dict['handlers']['file']['filename']).parent.mkdir(parents=True, exist_ok=True)
     logging.config.dictConfig(config_dict)
 
-def run_scraper(site, command, term_value, config):
+def run_scraper(site, command, term, value, config):
     logger.info('Initialising webdriver...')
     config['default']['site'] = site or config['default']['site']
     if config['default']['site'] == 'business':
@@ -39,19 +39,18 @@ def run_scraper(site, command, term_value, config):
                     'scan': driver.scan,
                     'scrape_all': driver.scrape_all}
         logger.info('Start scraping...')
-        search_term, search_value = term_value.split('=')
-        result = commands[command]({search_term:search_value})
-        search_keys = str({search_term:search_value})
+        result = commands[command]({term:value})
+        search_keys = str({term:value})
         result = {search_keys:result}
         logger.info('Finished scraping.')
     return result
 
-def main(site, command, term_value):
-    config_path = Path(r'.\config')
+def main(site, command, term, value):
+    config_path = Path(r'config')
     if config_path.exists():
         config = import_config(config_path)
     else:
         config = import_config()
     init_logger(config['logging'])
-    result = run_scraper(site, command, term_value, config)
+    result = run_scraper(site, command, term, value, config)
     return result

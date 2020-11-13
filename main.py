@@ -15,10 +15,10 @@ from src.config import ConfigManager
 
 def import_config(config_folder=None):
     Config = ConfigManager()
-    config_path = Path(config_folder or r'.\config')
+    config_path = Path(config_folder or r'config')
     if not config_path.exists():
-        Config.create_template('template.yaml',r'.\config')
-        Config.loads_yaml(r'.\config')
+        Config.create_template('template.yaml',r'config')
+        Config.loads_yaml(r'config')
     else:
         Config.loads_yaml(config_folder)
     return Config
@@ -68,7 +68,7 @@ def run_scraper(args, config):
     logger.info('Finished writing to %s.', output_file)
 
 def main():
-    config_path = Path(r'.\config')
+    config_path = Path(r'config')
     if config_path.exists():
         config = import_config(config_path)
     else:

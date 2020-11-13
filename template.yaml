@@ -1,9 +1,9 @@
 default:
   site: business #personal
-  input_folder: .\input
-  output_folder: .\output
-  solver_path: .\solver\CNN5_v10_acc_98.h5
-  webdriver_path: .\webdriver\geckodriver.exe
+  input_folder: input
+  output_folder: output
+  solver_path: solver/CNN5_v10_acc_98.h5
+  webdriver_path: webdriver/geckodriver.exe
   browser_path:
 logging:
   version: 1

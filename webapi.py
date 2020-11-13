@@ -1,13 +1,24 @@
 from fastapi import FastAPI
 from webapp import main
+from enum import Enum
+
+class Site(str, Enum):
+    business = 'business'
+    personal = 'personal'
+
+class Command(str, Enum):
+    scrape = 'scrape'
+    scan = 'scan'
+    scrape_all = 'scrape_all'
+
+class SearchTerms(Enum):
+    TaxNumber = 'TaxNumber'
+    Name = 'Name'
+    Address = 'Address'
+    IdNumber = 'IdNumber'
 
 app = FastAPI()
 
-@app.get(r'/get_business')
-async def scrape_business_record(command, term_value):
-    return main('business', command, term_value)
-
-@app.get(r'/get_personal')
-async def scrape_personal_record(command, term_value):
-    return main('personal', command, term_value)
-
+@app.get(r'/api/v1/{site}/{command}')
+async def scrape_record(site: Site, command: Command, term: SearchTerms, value):
+    return main(site.value, command.value, term.value, value)
