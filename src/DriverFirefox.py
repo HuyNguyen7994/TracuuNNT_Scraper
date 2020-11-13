@@ -382,7 +382,11 @@ class personal_scraper(webdriver.Firefox):
             del self.requests # avoid catching previous request
             self._submit_captcha(answer)
             req = self.wait_for_request(r'.+/mstcn.jsp$')
-            table_soup = bs(req.response.body,'lxml').find('table', attrs={'class':'ta_border'})
+            soup = bs(req.response.body,'lxml')
+            if "Bạn chưa nhập đủ các thông tin cần thiết." in soup.get_text():
+                logger.info('Insufficient data. Finished scraping. Record is empty.')
+                return None
+            table_soup = soup.find('table', attrs={'class':'ta_border'})
             if table_soup: # if table exists (failed captcha otherwise)
                 logger.debug('Captcha solved. Start scraping summary page...')
                 summary = self._parse_summary_table(table_soup)
@@ -435,7 +439,12 @@ class personal_scraper(webdriver.Firefox):
                 del self.requests # avoid catching previous request
                 self._submit_captcha(answer)
                 req = self.wait_for_request(r'.+/mstcn.jsp$')
-                table_soup = bs(req.response.body,'lxml').find('table', attrs={'class':'ta_border'})
+                soup = bs(req.response.body,'lxml')
+                if "Bạn chưa nhập đủ các thông tin cần thiết." in soup.get_text():
+                    logger.info('Insufficient data')
+                    summary = None
+                    break
+                table_soup = soup.find('table', attrs={'class':'ta_border'})
                 if table_soup: # if table exists (failed captcha otherwise)
                     summary = self._parse_summary_table(table_soup)
                     if summary: # if table is empty (no result otherwise)
