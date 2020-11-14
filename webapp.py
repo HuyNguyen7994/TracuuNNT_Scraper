@@ -7,50 +7,28 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # hack to suppress tensorflow logging (https://github.com/tensorflow/tensorflow/issues/31870). Anti-pattern. Consider changing it later
 
 from pathlib import Path
-from src import DriverFirefox
-from src.config import ConfigManager
+from src import webdriver, apputility
 
-def import_config(config_folder=None):
-    Config = ConfigManager()
-    config_path = Path(config_folder or r'config')
-    if not config_path.exists():
-        Config.create_template('template.yaml',r'config')
-        Config.loads_yaml(r'config')
-    else:
-        Config.loads_yaml(config_folder)
-    return Config
-
-def init_logger(config_dict):
-    Path(config_dict['handlers']['file']['filename']).parent.mkdir(parents=True, exist_ok=True)
-    logging.config.dictConfig(config_dict)
-
-def run_scraper(site, command, term, value, config):
+def run(site, command, term, value, config):
     logger.info('Initialising webdriver...')
-    config['default']['site'] = site or config['default']['site']
-    if config['default']['site'] == 'business':
-        logger.info('Navigating to TracuuNNT\\Doanh nghiep')
-        run_driver = DriverFirefox.business_scraper
-    elif config['default']['site'] == 'personal':
-        logger.info('Navigating to TracuuNNT\\Ca nhan')
-        run_driver = DriverFirefox.personal_scraper
+    if site == 'business':
+        logger.info('Navigating to mstdn.jsp')
+        run_driver = webdriver.BusinessProfileScraper
+    elif site == 'personal':
+        logger.info('Navigating to mstcn.jsp')
+        run_driver = webdriver.PersonalProfileScraper
     with run_driver(solver_path=config['default']['solver_path'], 
                     headless=True, executable_path=config['default']['webdriver_path']) as driver:
-        commands = {'scrape':driver.scrape,
-                    'scan': driver.scan,
-                    'scrape_all': driver.scrape_all}
         logger.info('Start scraping...')
-        result = commands[command]({term:value})
+        result = driver.run(command, {term:value})
         search_keys = str({term:value})
         result = {search_keys:result}
-        logger.info('Finished scraping.')
+        logger.info('Finished scraping. Spin down driver.')
     return result
 
 def main(site, command, term, value):
     config_path = Path(r'config')
-    if config_path.exists():
-        config = import_config(config_path)
-    else:
-        config = import_config()
-    init_logger(config['logging'])
-    result = run_scraper(site, command, term, value, config)
+    config = apputility.import_config(config_path)
+    apputility.init_logger(config['logging'])
+    result = run(site, command, term, value, config)
     return result

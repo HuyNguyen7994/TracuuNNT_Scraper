@@ -10,16 +10,15 @@ class Site(str, Enum):
 class Command(str, Enum):
     """Scrape will only get the 1st result from the search term, 
     while scan will gather as much information outside as possible without ever going into details"""
-    scrape = 'scrape'
-    scan = 'scan'
-    scrape_all = 'scrape_all'
+    pinpoint = 'pinpoint'
+    sweep = 'sweep'
 
 class SearchTerms(Enum):
     """Search terms corresponding to its associated field"""
-    TaxNumber = 'TaxNumber'
-    Name = 'Name'
-    Address = 'Address'
-    IdNumber = 'IdNumber'
+    taxnum = 'taxnum'
+    name = 'name'
+    address = 'address'
+    idnum = 'idnum'
 
 app = FastAPI()
 

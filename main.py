@@ -22,14 +22,14 @@ def init_argparser(config):
     args = parser.parse_args()
     return args
 
-def run_scraper(args, config):
+def run(args, config):
     logger.info('Initialising webdriver...')
     config['default']['site'] = args.site or config['default']['site']
     if config['default']['site'] == 'business':
-        logger.info('Navigating to TracuuNNT\\Doanh nghiep')
+        logger.info('Navigating to mstdn.jsp')
         run_driver = webdriver.BusinessProfileScraper
     elif config['default']['site'] == 'personal':
-        logger.info('Navigating to TracuuNNT\\Ca nhan')
+        logger.info('Navigating to mstcn.jsp')
         run_driver = webdriver.PersonalProfileScraper
     with run_driver(solver_path=config['default']['solver_path'], 
                     headless=True, executable_path=config['default']['webdriver_path']) as driver:
@@ -38,7 +38,7 @@ def run_scraper(args, config):
         result = driver.run(args.command, {search_term:search_value})
         search_keys = str({search_term:search_value})
         result = {search_keys:result}
-        logger.info('Finished scraping.')
+        logger.info('Finished scraping. Spin down driver.')
 
     logger.debug('Writing output...')
     output_folder = Path(args.output)
@@ -51,13 +51,10 @@ def run_scraper(args, config):
 
 def main():
     config_path = Path(r'config')
-    if config_path.exists():
-        config = apputility.import_config(config_path)
-    else:
-        config = apputility.import_config()
+    config = apputility.import_config(config_path)
     apputility.init_logger(config['logging'])
     args = init_argparser(config)
-    run_scraper(args, config)
+    run(args, config)
     
 if __name__ == '__main__':
     main()

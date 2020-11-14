@@ -1,5 +1,4 @@
 default:
-  site: business #personal
   input_folder: input
   output_folder: output
   solver_path: solver/CNN5_v10_acc_98_tf220_ubuntu2204.h5
@@ -20,7 +19,7 @@ logging:
       formatter: brief
       stream: ext://sys.stdout
     file:
-      class: logging.FileHandler
+      class: logging.FileHandler # TODO: change to RollingLog
       level: INFO
       formatter: full
       encoding: utf-8
@@ -36,6 +35,9 @@ logging:
       level: WARNING
       handlers : [console, file]
     src.solverutility:
+      level: WARNING
+      handlers : [console, file]
+    webapp:
       level: WARNING
       handlers : [console, file]
     

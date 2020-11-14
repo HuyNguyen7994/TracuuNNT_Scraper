@@ -18,6 +18,7 @@ def import_config(config_folder=None):
     Config = ConfigManager()
     config_path = Path(config_folder or r'config')
     if not config_path.exists():
+        logger.warning(r"config folder doesn't exist at folder path %s. Create new config from template.yaml and save in .\config", config_path)
         Config.create_template('template.yaml',r'config')
         Config.loads_yaml(r'config')
     else:
