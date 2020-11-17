@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from webapp import main
 from enum import Enum
 from uvicorn import run
+import os
 
 class Site(str, Enum):
     """Specify which site to scrape"""
@@ -32,4 +33,4 @@ async def greet():
     return "Hello World!!!"
 
 if __name__ == "__main__":
-    run(app, host='0.0.0.0', port=8000)
+    run(app, host='0.0.0.0', port=os.environ.get('PORT', '5000'))
