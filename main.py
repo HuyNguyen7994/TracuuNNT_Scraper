@@ -32,7 +32,7 @@ def run(args, config):
         logger.info('Navigating to mstcn.jsp')
         run_driver = webdriver.PersonalProfileScraper
     with run_driver(solver_path=config['default']['solver_path'], 
-                    headless=True, executable_path=config['default']['webdriver_path']) as driver:
+                    headless=True) as driver:
         logger.info('Start scraping...')
         search_term, search_value = args.input.split('=')
         result = driver.run(args.command, {search_term:search_value})

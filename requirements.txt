@@ -1,0 +1,7 @@
+selenium-wire
+fastapi
+uvicorn
+beautifulsoup4
+lxml
+pyyaml
+opencv-python
