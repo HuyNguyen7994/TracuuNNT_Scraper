@@ -1,9 +1,8 @@
 default:
-  site: business #personal
-  input_folder: .\input
-  output_folder: .\output
-  solver_path: .\solver\CNN5_v10_acc_98.h5
-  webdriver_path: .\webdriver\geckodriver.exe
+  input_folder: input
+  output_folder: output
+  solver_path: solver/CNN5_v10_acc_98_tf220_ubuntu2204.h5
+  webdriver_path: webdriver/geckodriver.exe
   browser_path:
 logging:
   version: 1
@@ -20,7 +19,7 @@ logging:
       formatter: brief
       stream: ext://sys.stdout
     file:
-      class: logging.FileHandler
+      class: logging.FileHandler # TODO: change to RollingLog
       level: INFO
       formatter: full
       encoding: utf-8
@@ -29,8 +28,17 @@ logging:
     __main__:
       level: INFO
       handlers : [console, file]
-    src.DriverFirefox:
+    src.webdriver:
       level: INFO
+      handlers : [console, file]
+    src.apputility:
+      level: WARNING
+      handlers : [console, file]
+    src.solverutility:
+      level: WARNING
+      handlers : [console, file]
+    webapp:
+      level: WARNING
       handlers : [console, file]
     
   

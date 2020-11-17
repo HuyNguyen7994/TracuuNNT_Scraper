@@ -10,22 +10,7 @@ import json
 import argparse
 from time import time
 from pathlib import Path
-from src import DriverFirefox
-from src.config import ConfigManager
-
-def import_config(config_folder=None):
-    Config = ConfigManager()
-    config_path = Path(config_folder or r'.\config')
-    if not config_path.exists():
-        Config.create_template('template.yaml',r'.\config')
-        Config.loads_yaml(r'.\config')
-    else:
-        Config.loads_yaml(config_folder)
-    return Config
-
-def init_logger(config_dict):
-    Path(config_dict['handlers']['file']['filename']).parent.mkdir(parents=True, exist_ok=True)
-    logging.config.dictConfig(config_dict)
+from src import webdriver, apputility
 
 def init_argparser(config):
     parser = argparse.ArgumentParser(description='Scrape records from http://tracuunnt.gdt.gov.vn/tcnnt/mstdn.jsp.\nGo to https://github.com/HuyNguyen7994/TracuuNNT_Scraper for more details.',
@@ -37,26 +22,23 @@ def init_argparser(config):
     args = parser.parse_args()
     return args
 
-def run_scraper(args, config):
+def run(args, config):
     logger.info('Initialising webdriver...')
     config['default']['site'] = args.site or config['default']['site']
     if config['default']['site'] == 'business':
-        logger.info('Navigating to TracuuNNT\\Doanh nghiep')
-        run_driver = DriverFirefox.business_scraper
+        logger.info('Navigating to mstdn.jsp')
+        run_driver = webdriver.BusinessProfileScraper
     elif config['default']['site'] == 'personal':
-        logger.info('Navigating to TracuuNNT\\Ca nhan')
-        run_driver = DriverFirefox.personal_scraper
+        logger.info('Navigating to mstcn.jsp')
+        run_driver = webdriver.PersonalProfileScraper
     with run_driver(solver_path=config['default']['solver_path'], 
                     headless=True, executable_path=config['default']['webdriver_path']) as driver:
-        commands = {'scrape':driver.scrape,
-                    'scan': driver.scan,
-                    'scrape_all': driver.scrape_all}
         logger.info('Start scraping...')
         search_term, search_value = args.input.split('=')
-        result = commands[args.command]({search_term:search_value})
+        result = driver.run(args.command, {search_term:search_value})
         search_keys = str({search_term:search_value})
         result = {search_keys:result}
-        logger.info('Finished scraping.')
+        logger.info('Finished scraping. Spin down driver.')
 
     logger.debug('Writing output...')
     output_folder = Path(args.output)
@@ -68,14 +50,11 @@ def run_scraper(args, config):
     logger.info('Finished writing to %s.', output_file)
 
 def main():
-    config_path = Path(r'.\config')
-    if config_path.exists():
-        config = import_config(config_path)
-    else:
-        config = import_config()
-    init_logger(config['logging'])
+    config_path = Path(r'config')
+    config = apputility.import_config(config_path)
+    apputility.init_logger(config['logging'])
     args = init_argparser(config)
-    run_scraper(args, config)
+    run(args, config)
     
 if __name__ == '__main__':
     main()
