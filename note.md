@@ -10,9 +10,12 @@ rewrite entire model for end-to-end prediction
 docker run -d -p 4444:4444 --shm-size 2g selenium/standalone-firefox:latest
 
 
-docker run -p 8501:8501 \
---mount type=bind,source=/mnt/f/huyng/Desktop/Programming/TracuuNNT_Scraper/solver/model/catpcha_solver,target=/models/catpcha_solver -e MODEL_NAME=catpcha_solver tensorflow/serving &
+docker run -d -p 8501:8501 \
+--mount type=bind,source=/mnt/f/huyng/Desktop/Programming/TracuuNNT_Scraper/model/CNN5_v10_acc_98_tf220_ubuntu2204,target=/models/catpcha_solver -e MODEL_NAME=catpcha_solver -t tensorflow/serving &
 
+
+docker run -d -p 8501:8501 \
+--mount type=bind,source=/mnt/f/huyng/Desktop/Programming/TracuuNNT_Scraper/model/CNN5_v10_acc_98_tf220_ubuntu2204,target=/models/solver -e MODEL_NAME=solver tensorflow/serving
 
 docker run -p 8501:8501 \
   --mount type=bind,\

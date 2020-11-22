@@ -1,8 +1,11 @@
 version: '3.8'
 
 services:
-    firefox:
-        image: selenium/standalone-firefox:latest
+    solver:
+        image: tensorflow/serving:latest
         ports:
-          - "4444:4444"
-        shm_size: 2g
+          - "8501:8501"
+        volumes:
+          - "./model/CNN5_v10_acc_98_tf220_ubuntu2204:/models/solver"
+        environment:
+          - "MODEL_NAME=solver"
