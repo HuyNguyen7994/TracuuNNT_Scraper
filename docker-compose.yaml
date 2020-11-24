@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  solver:
+    image: tensorflow/serving:latest
+    ports:
+      - "8501:8501"
+    volumes:
+      - "./model/CNN5_v10_acc_98_tf220_ubuntu2204:/models/solver"
+    environment:
+      - "MODEL_NAME=solver"
+  apiserver:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on: 
+      - solver

@@ -1,11 +1,10 @@
+# %%
 import logging
 from abc import abstractmethod
 from unicodedata import normalize
 from bs4 import BeautifulSoup as bs
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
-from .solverutility import (decode_image, preprocess_raw_image,
-                            array_to_label, image_to_tensor, load_model)
 
 logger = logging.getLogger(__name__)
 
@@ -17,38 +16,34 @@ class ProfileScraper(webdriver.Firefox):
     scopes = None
     site = None
     field_xpath = None
-    def __init__(self, solver_path=None, headless=True, executable_path='geckodriver', *args, **kwargs):
+    def __init__(self, *args, headless=True, solver=None, **kwargs):
         options = Options()
         options.headless = headless
-        super().__init__(options=options, executable_path=executable_path, *args, **kwargs)
-        if solver_path:
-            self.set_solver(solver_path)
-        else:
-            self.solver = None
+        super().__init__(options=options, *args, **kwargs)
         if not all((self.scopes, self.site, self.field_xpath)):
             raise NotImplementedError("Attributes 'scopes', 'site', 'field_xpath' must all be implemented")
+        if not solver:
+            raise NotImplementedError("Must specify a solver first")
+        else:
+            self.solver = solver
         
-    def set_solver(self, path):
-        """Set the solver to be used for captcha regconition. Must be a Tensorflow/Keras model that
-        supports predict method"""
-        logger.info('Loading solver at %s', path)
-        self.solver = load_model(path)
+    def set_solver(self, solver):
+        """Set the solver to be used for captcha regconition. Support any class that has predict method
+        Input: raw image bytes string
+        Output: prediction string
+        """
+        self.solver = solver
 
     def _get_captcha_image(self):
         """Capture the captcha returned by server, then decode and preprocess to a (1,64,128,1) Tensor"""
         for request in self.requests[::-1]:
             if 'captcha' in request.url:
-                img_content = request.response.body
-                img = decode_image(img_content) # bytes to cv2 array
-                img = preprocess_raw_image(img) # cv2 array to np array
-                img = image_to_tensor(img) # np array to Tensor array
-                return img
+                return request.response.body
 
     def _answer_captcha(self):
         """Use model to predict characters in captcha"""
         img = self._get_captcha_image()
         answer = self.solver.predict(img)
-        answer = ''.join(array_to_label(answer[0])) # since Tensor has an extra dimension
         return answer
 
     def _submit_captcha(self, answer, click=True):

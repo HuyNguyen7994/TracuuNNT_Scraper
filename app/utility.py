@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 # AUXILIARY FUNCTION
 
 def init_logger(config_dict):
-    Path(config_dict['handlers']['file']['filename']).parent.mkdir(parents=True, exist_ok=True)
     logging.config.dictConfig(config_dict)
 
 # CONFIG MANAGEMENT
