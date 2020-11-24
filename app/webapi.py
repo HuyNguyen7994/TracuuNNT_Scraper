@@ -1,8 +1,9 @@
-from fastapi import FastAPI
-from webapp import main
-from enum import Enum
-from uvicorn import run
+# -*- coding: utf-8 -*-
 import os
+from enum import Enum
+from fastapi import FastAPI
+from uvicorn import run
+from main import search
 
 class Site(str, Enum):
     """Specify which site to scrape"""
@@ -26,11 +27,8 @@ app = FastAPI()
 
 @app.get(r'/api/v1/{site}/{command}')
 async def scrape_record(site: Site, command: Command, term: SearchTerms, value):
-    return main(site.value, command.value, term.value, value)
+    return search(site.value, command.value, term.value, value)
 
 @app.get(r'/')
 async def greet():
-    return "Hello World!!!"
-
-if __name__ == "__main__":
-    run(app, host='0.0.0.0', port=os.environ.get('PORT', '5000'))
+    return "Hello World. API is online."

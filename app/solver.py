@@ -1,14 +1,11 @@
-"""Helpful function to preprocess image and help with training/using the neural network"""
+"""Functions and Class to manage I/O for Tensorflow Serving Webserver"""
 
 import cv2
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.utils import to_categorical
+import requests as rq
 
 VALID_CHAR = '2345678abcdefghkmnprwxy'
 VALID_SIZE = 5
-
-load_model = tf.keras.models.load_model
 
 def decode_image(bytes_string):
     """Decode the captcha images from bytes string and extract the alpha channel"""
@@ -64,13 +61,60 @@ def preprocess_raw_image(cv2_image, pad=1):
     image = np.array(image)
     return image
 
-def image_to_tensor(image):
-    """convert and reshape into correct shape (bs,height,width,channel)"""
-    image = tf.cast(image, tf.float32)
-    image = tf.expand_dims(image, 0)
-    image = tf.expand_dims(image, -1)
-    image = tf.image.resize_with_pad(image, 64, 128)
-    return image
+def resize_then_pad(image, height, width):
+    img_h, img_w = image.shape
+    ratio = min(height / img_h, width / img_w)
+    new_img = cv2.resize(image, (int(img_w*ratio), int(img_h*ratio)))
+    new_img_h, new_img_w = new_img.shape
+    delta_h = height - new_img_h
+    delta_w = width - new_img_w
+    top = delta_h // 2
+    bottom = delta_h - top
+    left = delta_w //2
+    right = delta_w - left
+    new_img = cv2.copyMakeBorder(new_img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=0)
+    return new_img
+
+def image_to_list(image):
+    """convert and reshape into correct shape (bs,height,width,channel) and return as native Python list"""
+    img = np.array(image)
+    img = np.expand_dims(img, 0)
+    img = np.expand_dims(img, -1)
+    return img.tolist()
+
+def preprocess_image(raw_input):
+    img = decode_image(raw_input)
+    img = preprocess_raw_image(img)
+    img = resize_then_pad(img, 64, 128)
+    img = image_to_list(img)
+    return img
+
+def to_categorical(y, num_classes=None, dtype='float32'):
+    """Converts a class vector (integers) to binary class matrix.
+    E.g. for use with categorical_crossentropy.
+    Arguments:
+        y: class vector to be converted into a matrix
+            (integers from 0 to num_classes).
+        num_classes: total number of classes. If `None`, this would be inferred
+        as the (largest number in `y`) + 1.
+        dtype: The data type expected by the input. Default: `'float32'`.
+    Returns:
+        A binary matrix representation of the input. The classes axis is placed
+        last.
+    """
+    y = np.array(y, dtype='int')
+    input_shape = y.shape
+    if input_shape and input_shape[-1] == 1 and len(input_shape) > 1:
+        input_shape = tuple(input_shape[:-1])
+    y = y.ravel()
+    if not num_classes:
+        num_classes = np.max(y) + 1
+    n = y.shape[0]
+    categorical = np.zeros((n, num_classes), dtype=dtype)
+    categorical[np.arange(n), y] = 1
+    output_shape = input_shape + (num_classes,)
+    categorical = np.reshape(categorical, output_shape)
+    return categorical
 
 def label_to_array(label, valid_char=VALID_CHAR, valid_num=VALID_SIZE):
     """convert string labels into valid one-hot coded array.
@@ -108,3 +152,16 @@ def array_to_label(array, trans_char=VALID_CHAR):
     for vector in label_vector:
         result.append(trans_char[vector])
     return result
+
+class SolverManager():
+    """Manage I/O for Solver"""
+    def __init__(self, MODEL_API = r"http://localhost:8501/v1/models/solver:predict"):
+        self.API = MODEL_API
+        
+    def predict(self, raw_input):
+        image = preprocess_image(raw_input)
+        with rq.post(self.API, json={'instances':image}) as response:
+            json_result = response.json()
+        return ''.join(array_to_label(np.array(json_result['predictions'])[0]))
+    
+

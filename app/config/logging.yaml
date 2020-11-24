@@ -1,0 +1,30 @@
+disable_existing_loggers: true
+formatters:
+  brief:
+    format: '%(asctime)s : %(message)s'
+  full:
+    format: '%(asctime)s : %(levelname)s : %(name)s : %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: brief
+    level: INFO
+    stream: ext://sys.stdout
+loggers:
+  main:
+    handlers:
+    - console
+    level: INFO
+  solver:
+    handlers:
+    - console
+    level: WARNING
+  utility:
+    handlers:
+    - console
+    level: WARNING
+  webdriver:
+    handlers:
+    - console
+    level: INFO
+version: 1

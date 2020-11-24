@@ -1,7 +1,3 @@
-default:
-  input_folder: input
-  output_folder: output
-  solver_path: solver/CNN5_v10_acc_98_tf220_ubuntu2204.h5
 logging:
   version: 1
   disable_existing_loggers: True
@@ -20,16 +16,13 @@ logging:
     __main__:
       level: INFO
       handlers : [console]
-    src.webdriver:
+    webdriver:
       level: INFO
       handlers : [console]
-    src.apputility:
+    utility:
       level: WARNING
       handlers : [console]
-    src.solverutility:
-      level: WARNING
-      handlers : [console]
-    webapp:
+    solver:
       level: WARNING
       handlers : [console]
     
